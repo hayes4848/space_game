@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Space Game</title>
+	<script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+	<script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r73/three.js"></script>
+	<!-- <script src="OBJMTLLoader.js"></script> -->
+	<script src="/MTLLoader.js"></script>
+	<script src="/OBJLoader.js"></script> 
+	<script src="/tween.js"></script>
+	<script src="/game.js"></script>
+
+
+	<style type="text/css">
+		body {
+			overflow: hidden;
+		}
+		canvas{
+			width: 100%;
+			height: 100%;
+			overflow: hidden;
+		}
+	</style>
+</head>
+<body>
+</body>
+
+<script>
+$(document).ready(function() {	
+	 // var gamepadSupportAvailable = !!navigator.webkitGetGamepads || !!navigator.webkitGamepads;
+	 var page = $('#body-container');
+	 var scene = new THREE.Scene();
+	 var rotationX = 0;
+	 var rotationY = 0;
+	 var starship, ship, rock, collisionBox;
+	 var spaceship = null;
+	 var tunnels = [];
+	 var NUMOFASTEROIDS = 10;
+	 var asteroids = [];
+	 var hitBox = new THREE.Box3();
+	 var manager = new THREE.LoadingManager();
+					manager.onProgress = function ( item, loaded, total ) {
+
+					};
+
+
+	  // This is what sees the stuff:
+	  var aspect_ratio = window.innerWidth / window.innerHeight;
+	  var camera = new THREE.PerspectiveCamera(75, aspect_ratio, 1, 10000);
+	  camera.position.z = 200;
+	  camera.position.y = 0;
+	  camera.setLens(35);
+	  scene.add(camera);
+
+	  // This will draw what the camera sees onto the screen:
+	  var renderer = new THREE.WebGLRenderer({antialias: true, alpha:true});
+	  renderer.setSize(window.innerWidth, window.innerHeight);
+	  renderer.setClearColor(0x000022, 1);
+	  document.body.appendChild(renderer.domElement);
+
+	  var ambLight = new THREE.AmbientLight(0xFFFFFF, 0.9);
+	  scene.add(ambLight);
+	  scene.fog = new THREE.FogExp2(0x0000022, 0.00125)
+
+	  // ******** START CODING ON THE NEXT LINE ********
+
+	
+	var materialGreenApple = new THREE.MeshPhongMaterial({
+	    map: THREE.ImageUtils.loadTexture('/public/green_apple_with_gray.png'),
+	    specular: 0xBDBEC7,
+	    shininess: 50,
+	  });
+
+	var materialRock = new THREE.MeshPhongMaterial({
+		map: THREE.ImageUtils.loadTexture('/public/RockTexture.jpg'), 
+		specular: 0xffffff, 
+		shininess: 50,
+	});
+
+	var material = new THREE.MeshBasicMaterial({map: THREE.ImageUtils.loadTexture('/public/space-background.jpg', 
+	  null, function(tex) {
+      tex.wrapS = tex.wrapT = THREE.RepeatWrapping
+      tex.repeat.set(1, 5)
+      tex.needsUpdate = true
+    }),
+	side: THREE.BackSide});
+
+var tube = new THREE.CylinderGeometry(300, 300, 5000, 24, 24, true);
+var tunnel1 = new THREE.Mesh(tube, material);	
+tunnel1.rotation.x = -Math.PI/2;
+scene.add(tunnel1);
+tunnels.push(tunnel1);
+
+var tube = new THREE.CylinderGeometry(300, 300, 5000, 24, 24, true);
+var tunnel2 = new THREE.Mesh(tube, material);	
+tunnel2.rotation.x = -Math.PI/2;
+tunnel2.position.set(0,0,-5000);
+scene.add(tunnel2);
+tunnels.push(tunnel2);
+
+
+//spaceship 
+var spaceShip = function(){
+	var loader = new THREE.OBJLoader( manager ), self = this;
+		spaceship = new THREE.Object3D();
+		this.loaded = false;
+		loader.load( '/public/ARC170.obj', function ( object ) {
+			object.traverse( function ( child ) {
+				if ( child instanceof THREE.Mesh ) {
+					child.material = materialGreenApple;
+				}
+			} );
+			// object.scale(0.1, 0.1, 0.1);
+			spaceship.add(object);
+			
+			object.name = "ship";
+			object.scale.set(0.08, 0.08, 0.08);
+			object.position.set(0,0, -200);
+			spaceship = object;
+			self.spaceShip = spaceship;
+			camera.add(self.spaceShip);
+			self.loaded = true;
+			
+		});
+	this.hitbox = new THREE.Box3();
+	this.update = function() {
+		   if(!spaceship) return
+		   this.hitbox.setFromObject(spaceship);
+		}
+	this.getShip = function(){
+		return spaceship;
+	}
+	return this;
+}	
+   		
+//asteroids function
+var Asteroid = function() {
+  var loader = new THREE.OBJLoader( manager );	
+  var mesh = new THREE.Object3D(), self = this
+  this.loaded = false
+
+  // Speed of motion and rotation
+  mesh.velocity = Math.random() * 2 + 2
+  mesh.vRotation = new THREE.Vector3(Math.random(), Math.random(), Math.random())
+  this.hitbox = new THREE.Box3();
+
+  loader.load('/public/Rock.obj', function(obj) {
+    obj.traverse(function(child) {
+      if(child instanceof THREE.Mesh) {
+        child.material = materialRock;
+      }
+    })
+
+    obj.scale.set(10,10,10)
+
+    mesh.add(obj)
+    mesh.position.set(-50 + Math.random() * 100,
+    				  -50 + Math.random() * 100, 
+    				  -1500 - Math.random() * 1500)
+    self.loaded = true
+  })
+
+  this.update = function(z) {
+    mesh.position.z += mesh.velocity
+    mesh.rotation.x += mesh.vRotation.x * 0.02;
+    mesh.rotation.y += mesh.vRotation.y * 0.02;
+    mesh.rotation.z += mesh.vRotation.z * 0.02;
+
+    if(mesh.children.length > 0) this.hitbox.setFromObject(mesh.children[0])
+
+
+    if(mesh.position.z > z) {
+      this.reset(z);	
+      mesh.velocity = Math.random() * 2 + 2
+      mesh.position.set(
+        -50 + Math.random() * 150,
+        -50 + Math.random() * 150, 
+        z - 1500 - Math.random() * 1000
+      )
+    }
+  }
+
+    this.reset = function(z) {
+	   mesh.velocity = Math.random() * 2 + 2
+	   mesh.position.set(-50 + Math.random() * 100, -50 + Math.random() * 100, z - 1500 - Math.random() * 1500)
+	}
+
+  this.getMesh = function() {
+    return mesh
+  }
+
+  return this
+}	
+	
+
+for(var i=0; i<NUMOFASTEROIDS; i++){
+	asteroids.push(new Asteroid());
+	scene.add(asteroids[i].getMesh());
+}					
+
+	// checkGamePad = function(){
+	//   if(!!navigator.getGamepads){
+	//     var gamepad = navigator.getGamepads();
+	//     console.log(gamepad[0].id);
+	//   }
+	// }
+
+	// leftJoystick = function() {
+	//   var gamepad = navigator.getGamepads();
+	//   if(gamepad[0].axes[0] < 0.25 && gamepad[0].axes[0] > -0.25 ){ //stick in middle
+	//   	rotationX = 0;
+	//  	new TWEEN.Tween(ship.rotation).to({z: 0}, 150).start().onComplete(function() {
+	// 															  console.log('done!')
+	// 															}); 
+	//   }else if (gamepad[0].axes[0] < -0.25){ //stick to left
+	//     rotationX = -1.5;
+	//  	new TWEEN.Tween(ship.rotation).to({z: 0.2}, 150).start();
+	//   }else if(gamepad[0].axes[0] > 0.25){ // stick to right
+	//     rotationX = 1.5;
+	//  	new TWEEN.Tween(ship.rotation).to({z: -0.2}, 150).start();
+	//   }
+	  // } else if(gamepad[0].axes[1] > 0.25){
+	  //   rotationY = 1.5;
+	 	// new TWEEN.Tween(ship.rotation).to({x: 0.3}, 150).start();
+	  // }else if (gamepad[0].axes[1] < -0.25){
+	  //   rotationY = -1.5;
+	 	// new TWEEN.Tween(ship.rotation).to({x: -0.3}, 150).start();
+	  // }
+	// }
+
+	// rightJoystick = function(){
+	//   var gamepad = navigator.getGamepads();
+	//   if(gamepad[0].axes[2] > 0.25){
+	//     ball.rotation.y += 0.01;
+	//   }else if(gamepad[0].axes[2] < -0.25){
+	//     ball.rotation.y -= 0.01;
+	//   }else if(gamepad[0].axes[3] > 0.25){
+	//     ball.rotation.x += 0.01;
+	//   }else if(gamepad[0].axes[3] < -0.25){
+	//     ball.rotation.x -= 0.01;
+	//   }
+	// }
+
+	var animate = function(){
+	  requestAnimationFrame(animate);
+	  renderer.render(scene, camera);
+	  // leftJoystick();
+	  // rightJoystick();
+	  ship1.update();
+	  if(spaceship !== undefined){	
+	  	spaceship.position.x += rotationX;
+	  	spaceship.position.y += rotationY;
+	  	camera.position.z -= 5;
+	  }
+
+	  for(var i=0; i<2; i++){
+	  	if(tunnels[i].position.z > camera.position.z + 2500 ){
+	  		tunnels[i].position.z = tunnels[i].position.z -4000;
+	  	}
+	  }
+	  TWEEN.update();
+
+	  for(var i=0;i<NUMOFASTEROIDS;i++){
+	    asteroids[i].update(camera.position.z);
+	  if(ship1.hitbox.isIntersectionBox(asteroids[i].hitbox)) {
+	     asteroids[i].reset(camera.position.z)
+	   }
+	  } 
+	}
+	// checkGamePad();
+		var ship1 = new spaceShip();
+		animate();
+
+	  // Now, show what the camera sees on the screen:
+	  
+	function handleKeyDown(event){
+	 if(event.keyCode == 83){ //s
+	 	
+	 }else if(event.keyCode == 37){ //left arrow
+	 	rotationX = -2.5;
+	    new TWEEN.Tween(spaceship.rotation).to({z: 0.3}, 150).start();
+	 }else if(event.keyCode == 39){ //right arrow
+	 	rotationX = 2.5;
+	 	new TWEEN.Tween(spaceship.rotation).to({z: -0.3}, 150).start();
+	 }else if(event.keyCode == 38){ //up arrow
+	 	rotationY = 2.5;
+	 	new TWEEN.Tween(spaceship.rotation).to({x: 0.35}, 150).start();
+	 }else if(event.keyCode == 40){ //down arrow
+	 	rotationY = -2.5;
+	 	new TWEEN.Tween(spaceship.rotation).to({x: -0.35}, 150).start();
+	 }
+	}
+
+	function handleKeyUp(event){
+	 if(event.keyCode == 83){ //s
+
+	 }else if(event.keyCode == 37){ //left arrow
+	 	rotationX = 0;
+	 	new TWEEN.Tween(spaceship.rotation).to({z: 0}, 150).start();
+	 }else if(event.keyCode == 39){ //right arrow
+	 	rotationX = 0;
+	 	new TWEEN.Tween(spaceship.rotation).to({z: 0}, 150).start();
+	 }else if(event.keyCode == 38){ //up arrow
+	 	rotationY = 0;
+	 	new TWEEN.Tween(spaceship.rotation).to({x: 0}, 150).start();
+	 }else if(event.keyCode == 40){ //down arrow
+	 	rotationY = 0;
+	 	new TWEEN.Tween(spaceship.rotation).to({x: 0}, 150).start();
+	 }
+	}
+
+	window.addEventListener('keydown', handleKeyDown, false);
+	window.addEventListener('keyup', handleKeyUp, false);
+
+});
+</script>
+</html>
