@@ -1,35 +1,67 @@
-<!DOCTYPE html>
 <html>
 <head>
-	<title>Space Game</title>
+	<title>Smartphone Controller Game</title>
 	<script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
 	<script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+	<script type="text/javascript" src="/socket.io/socket.io.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r73/three.js"></script>
-	<!-- <script src="OBJMTLLoader.js"></script> -->
-	<script src="/MTLLoader.js"></script>
-	<script src="/OBJLoader.js"></script> 
-	<script src="/tween.js"></script>
-	<script src="/game.js"></script>
-
-
-	<style type="text/css">
-		body {
-			overflow: hidden;
+	<script src="https://s3.amazonaws.com/gamepad-js/MTLLoader.js"></script>
+	<script src="https://s3.amazonaws.com/gamepad-js/OBJLoader.js"></script> 
+	<script src="https://s3.amazonaws.com/gamepad-js/tween.js"></script>
+	<script src="//davidshimjs.github.com/qrcodejs/qrcode.min.js"></script>
+	<style>
+		body{
+			margin: 0;
 		}
-		canvas{
-			width: 100%;
-			height: 100%;
-			overflow: hidden;
+		#QR_code{
+			position: absolute;
+			top: 40%;
+			left: 40%;
+			padding: 20px;
+			background: white;
+		}
+		.buttons{
+			display: none;
+		}
+		.buttons img{
+			width: 25%;
 		}
 	</style>
 </head>
 <body>
+	<div class="buttons">
+		<img id="backarrow" src="BackArrow.svg">
+		<img id="arrow" src="Arrow.svg">
+	</div>
 </body>
-
 <script>
-$(document).ready(function() {	
-	 // var gamepadSupportAvailable = !!navigator.webkitGetGamepads || !!navigator.webkitGamepads;
-	 var page = $('#body-container');
+var ip = '10.0.0.4', // Your ip
+		port = ':3000',
+		io = io.connect(),
+		current_url = window.location.href;
+io.on('connect', function() {
+	// Game setup
+	var game = function(ip){
+		var QR_code_element,
+		create_QR = function(){
+			var QR_code,
+					url = "http://" + ip + port + "?id=" + io.id;
+			// Create the container for the QR code to be created in
+			QR_code_element = document.createElement('div');
+			// Assign an id to the element
+			QR_code_element.id = "QR_code";
+			// Append QR code element to the body
+			document.body.appendChild(QR_code_element);
+			// Assign the actual DOM element
+			QR_code_element = document.getElementById('QR_code');
+			// Create a QRCode
+			QR_code = new QRCode("QR_code");
+			QR_code.makeCode(url);
+		},
+		game_connected = function(){
+			create_QR();
+			io.removeListener('game_connected', game_connected);
+		}
 	 var scene = new THREE.Scene();
 	 var rotationX = 0;
 	 var rotationY = 0;
@@ -39,17 +71,18 @@ $(document).ready(function() {
 	 var NUMOFASTEROIDS = 10;
 	 var asteroids = [];
 	 var hitBox = new THREE.Box3();
+	 var shots = [];
 	 var manager = new THREE.LoadingManager();
 					manager.onProgress = function ( item, loaded, total ) {
 
 					};
 
-
 	  // This is what sees the stuff:
 	  var aspect_ratio = window.innerWidth / window.innerHeight;
 	  var camera = new THREE.PerspectiveCamera(75, aspect_ratio, 1, 10000);
 	  camera.position.z = 200;
-	  camera.position.y = 0;
+	  camera.position.y = 100;
+	  camera.lookAt(0,0,0);
 	  camera.setLens(35);
 	  scene.add(camera);
 
@@ -67,23 +100,24 @@ $(document).ready(function() {
 
 	
 	var materialGreenApple = new THREE.MeshPhongMaterial({
-	    map: THREE.ImageUtils.loadTexture('/public/green_apple_with_gray.png'),
+	    map: THREE.ImageUtils.loadTexture('green_apple_with_gray.png'),
 	    specular: 0xBDBEC7,
 	    shininess: 50,
 	  });
 
 	var materialRock = new THREE.MeshPhongMaterial({
-		map: THREE.ImageUtils.loadTexture('/public/RockTexture.jpg'), 
+		map: THREE.ImageUtils.loadTexture('RockTexture.jpg'), 
 		specular: 0xffffff, 
 		shininess: 50,
 	});
 
-	var material = new THREE.MeshBasicMaterial({map: THREE.ImageUtils.loadTexture('/public/space-background.jpg', 
+	var material = new THREE.MeshBasicMaterial({map: THREE.ImageUtils.loadTexture('space-background.jpg', 
 	  null, function(tex) {
       tex.wrapS = tex.wrapT = THREE.RepeatWrapping
       tex.repeat.set(1, 5)
       tex.needsUpdate = true
     }),
+    
 	side: THREE.BackSide});
 
 var tube = new THREE.CylinderGeometry(300, 300, 5000, 24, 24, true);
@@ -105,7 +139,7 @@ var spaceShip = function(){
 	var loader = new THREE.OBJLoader( manager ), self = this;
 		spaceship = new THREE.Object3D();
 		this.loaded = false;
-		loader.load( '/public/ARC170.obj', function ( object ) {
+		loader.load( 'ARC170.obj', function ( object ) {
 			object.traverse( function ( child ) {
 				if ( child instanceof THREE.Mesh ) {
 					child.material = materialGreenApple;
@@ -113,9 +147,8 @@ var spaceShip = function(){
 			} );
 			// object.scale(0.1, 0.1, 0.1);
 			spaceship.add(object);
-			
 			object.name = "ship";
-			object.scale.set(0.08, 0.08, 0.08);
+			object.scale.set(0.04, 0.04, 0.04);
 			object.position.set(0,0, -200);
 			spaceship = object;
 			self.spaceShip = spaceship;
@@ -145,7 +178,7 @@ var Asteroid = function() {
   mesh.vRotation = new THREE.Vector3(Math.random(), Math.random(), Math.random())
   this.hitbox = new THREE.Box3();
 
-  loader.load('/public/Rock.obj', function(obj) {
+  loader.load('Rock.obj', function(obj) {
     obj.traverse(function(child) {
       if(child instanceof THREE.Mesh) {
         child.material = materialRock;
@@ -153,7 +186,6 @@ var Asteroid = function() {
     })
 
     obj.scale.set(10,10,10)
-
     mesh.add(obj)
     mesh.position.set(-50 + Math.random() * 100,
     				  -50 + Math.random() * 100, 
@@ -192,7 +224,32 @@ var Asteroid = function() {
 
   return this
 }	
-	
+
+var Shot = function(initialPos) {
+	var box = new THREE.Object3D(), self = this
+	var shape = new THREE.SphereGeometry(3, 15, 15);
+	var material = new THREE.MeshBasicMaterial({color: 0xFFFFFF});
+	this.mesh = new THREE.Mesh(shape, material); 
+	this.mesh.position.copy(initialPos);
+
+
+
+	this.getMesh = function() {
+	   return this.mesh
+	}
+	this.hitbox = new THREE.Box3();
+	this.update = function(z) {
+	   this.mesh.position.z -= 15;
+	   this.hitbox.setFromObject(this.mesh);
+	   if(Math.abs(this.mesh.position.z - z) > 1000) {
+	     return false
+	     delete this.mesh
+	   }
+	   return true
+	}
+	return this
+
+}	
 
 for(var i=0; i<NUMOFASTEROIDS; i++){
 	asteroids.push(new Asteroid());
@@ -249,8 +306,22 @@ for(var i=0; i<NUMOFASTEROIDS; i++){
 	  // rightJoystick();
 	  ship1.update();
 	  if(spaceship !== undefined){	
-	  	spaceship.position.x += rotationX;
-	  	spaceship.position.y += rotationY;
+	  	if(controller_state.moveX !== undefined){
+	  		spaceship.position.x += controller_state.moveX;
+	  		if(controller_state.moveX == -1.5 && spaceship.rotation.z <= 0.3){
+	  			spaceship.rotation.z += 0.05;
+	  		} else if(controller_state.moveX == 0 && spaceship.rotation.z >= 0){
+	  			spaceship.rotation.z -= 0.05;
+	  		} else if(controller_state.moveX == 1.5 && spaceship.rotation.z >= -0.3){
+	  			spaceship.rotation.z -= 0.05;
+	  		} else if(controller_state.moveX == 0 && spaceship.rotation.z <= 0){
+	  			spaceship.rotation.z += 0.05;
+	  		}
+	  	}
+	  	if(controller_state.moveY !== undefined){
+	  		
+	  	}
+	  		
 	  	camera.position.z -= 5;
 	  }
 
@@ -259,21 +330,148 @@ for(var i=0; i<NUMOFASTEROIDS; i++){
 	  		tunnels[i].position.z = tunnels[i].position.z -4000;
 	  	}
 	  }
-	  TWEEN.update();
 
+	  //check for collision between asteroids and ship
 	  for(var i=0;i<NUMOFASTEROIDS;i++){
 	    asteroids[i].update(camera.position.z);
 	  if(ship1.hitbox.isIntersectionBox(asteroids[i].hitbox)) {
 	     asteroids[i].reset(camera.position.z)
 	   }
 	  } 
+
+	  // check if shots are still alive
+	  for(var i=0; i<shots.length; i++) {
+		   if(!shots[i].update(camera.position.z)) {
+		     scene.remove(shots[i].getMesh())
+		     shots.splice(i, 1)
+		   }
+		}
+
+		//check for collision between shots and asteroids
+	  for(var j=0; j<shots.length; j++) {
+	     if(asteroids[i].hitbox.isIntersectionBox(shots[j].hitbox)) {
+	       asteroids[i].reset(camera.position.z)
+	       scene.remove(shots[j].getMesh());
+	       shots.splice(j, 1)
+	       // break
+	     }
+	   }
+	   TWEEN.update();	
 	}
+	controller_state = {};
+
+
 	// checkGamePad();
 		var ship1 = new spaceShip();
 		animate();
 
-	  // Now, show what the camera sees on the screen:
-	  
+		$('#backarrow').on('click', function(){
+			new TWEEN.Tween(spaceship.rotation).to({z: 0.3}, 150).start();
+			console.log('tween');
+		})
+		
+
+		// Tell the server that the client is connecting as a game
+		io.emit('game_connect');
+		// When the server has registered this client as a game
+		// Create a QR code which will be a url with this game id as a parameter
+		io.on('game_connected', game_connected);
+		// When a controller has connected/disconnected to this game
+		io.on('controller_connected', function(connected){
+			if(connected){
+				// Hide the QR code
+				QR_code_element.style.display = "none";
+			}else{
+				// Show the QR code
+				QR_code_element.style.display = "block";
+				controller_state = {};
+			}
+		})
+		// When the server sends a changed controller state update it in the game
+		io.on('controller_state_change', function(state){
+			controller_state = state;
+		});
+	},
+	// Controller set up
+	controller = function(game_id){
+		// Tell the server this client is connecting as a controller
+		// sending the id of the game to connect to
+		io.emit('controller_connect', game_id);
+		// Server will send back a connected boolean
+		io.on('controller_connected', function(connected){
+			if(connected){
+				// Successful connection
+				// alert("Connected!");
+				var controller_state = {
+					accelerate: false,
+					steer: 0
+				},
+				emit_updates = function(){
+					io.emit('controller_state_change', controller_state);
+				}
+				backarrowstart = function(e){
+					e.preventDefault();
+					controller_state.moveX = -1.5;
+					emit_updates();
+				},
+				backarrowend = function(e){
+					e.preventDefault();
+					controller_state.moveX = 0;
+					emit_updates();
+				},
+				arrowstart = function(e){
+					e.preventDefault();
+					controller_state.moveX = 1.5;
+					emit_updates();
+				},
+				arrowend = function(e){
+					e.preventDefault();
+					controller_state.moveX = 0;
+					emit_updates();
+				},
+				touchstart = function(e){
+					e.preventDefault();
+					controller_state.moveX = -1.5;
+					emit_updates();
+				},
+				touchend = function(e){
+					e.preventDefault();
+					controller_state.moveX = -0;
+					emit_updates();
+				},
+				devicemotion = function(e){
+					controller_state.steer = e.acceleration.x * 100;
+					emit_updates();
+				}
+				document.getElementById('backarrow').addEventListener('touchstart', backarrowstart, false);
+				document.getElementById('backarrow').addEventListener('touchend', backarrowend, false);
+				document.getElementById('arrow').addEventListener('touchstart',arrowstart, false);
+				document.getElementById('arrow').addEventListener('touchend', arrowend, false);
+				// document.body.addEventListener('touchstart', touchstart, false); // iOS & Android
+				document.body.addEventListener('MSPointerDown', touchstart, false); // Windows Phone
+				document.body.addEventListener('touchend', touchend, false); // iOS & Android
+				document.body.addEventListener('MSPointerUp', touchend, false); // Windows Phone
+				window.addEventListener('devicemotion', devicemotion, false);
+				
+			}else{
+				// Failed connection
+				// alert("Not connected!");
+			}
+			
+		});
+	}
+	// If the url has an id in it
+	if(current_url.indexOf('?id=') > 0){
+		$('.buttons').show();
+		// Set up the controller using the game id in the url
+		controller(current_url.split('?id=')[1])
+	}else{
+		$('.buttons').hide();
+		// Set up the game using ip
+		game(ip);
+	}
+
+
 	function handleKeyDown(event){
 	 if(event.keyCode == 83){ //s
 	 	
@@ -291,10 +489,8 @@ for(var i=0; i<NUMOFASTEROIDS; i++){
 	 	new TWEEN.Tween(spaceship.rotation).to({x: -0.35}, 150).start();
 	 }
 	}
-
 	function handleKeyUp(event){
 	 if(event.keyCode == 83){ //s
-
 	 }else if(event.keyCode == 37){ //left arrow
 	 	rotationX = 0;
 	 	new TWEEN.Tween(spaceship.rotation).to({z: 0}, 150).start();
@@ -309,9 +505,6 @@ for(var i=0; i<NUMOFASTEROIDS; i++){
 	 	new TWEEN.Tween(spaceship.rotation).to({x: 0}, 150).start();
 	 }
 	}
-
-	window.addEventListener('keydown', handleKeyDown, false);
-	window.addEventListener('keyup', handleKeyUp, false);
 
 });
 </script>
