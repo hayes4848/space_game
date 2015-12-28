@@ -22,16 +22,44 @@
 		}
 		.buttons{
 			display: none;
+			background-color: gray;
+			height: 100%;
 		}
 		.buttons img{
+			position: absolute;
 			width: 25%;
+		}
+		#toparrow{
+			-webkit-transform: rotate(90deg);
+			top: 0;
+			margin-left: 37%;
+			margin-right: 37%;
+		}
+		#bottomarrow{
+			-webkit-transform: rotate(90deg);
+			bottom: 0;
+			margin-left: 37%;
+			margin-right: 37%;
+		}
+		#arrow{
+			right: 0;
+			margin-top: 50%;
+			/*margin-left: 50%;*/
+
+
+		}
+		#backarrow{
+			left: 0;
+			margin-top: 50%;
 		}
 	</style>
 </head>
 <body>
 	<div class="buttons">
+		<img id="toparrow" src="BackArrow.svg">
 		<img id="backarrow" src="BackArrow.svg">
 		<img id="arrow" src="Arrow.svg">
+		<img id="bottomarrow" src="Arrow.svg">
 	</div>
 </body>
 <script>
@@ -178,14 +206,14 @@ var Asteroid = function() {
   mesh.vRotation = new THREE.Vector3(Math.random(), Math.random(), Math.random())
   this.hitbox = new THREE.Box3();
 
-  loader.load('Rock.obj', function(obj) {
+  loader.load('decimated_stick.obj', function(obj) {
     obj.traverse(function(child) {
       if(child instanceof THREE.Mesh) {
-        child.material = materialRock;
+        child.material = materialGreenApple;
       }
     })
 
-    obj.scale.set(10,10,10)
+    obj.scale.set(2,2,2)
     mesh.add(obj)
     mesh.position.set(-50 + Math.random() * 100,
     				  -50 + Math.random() * 100, 
@@ -308,17 +336,32 @@ for(var i=0; i<NUMOFASTEROIDS; i++){
 	  if(spaceship !== undefined){	
 	  	if(controller_state.moveX !== undefined){
 	  		spaceship.position.x += controller_state.moveX;
-	  		if(controller_state.moveX == -1.5 && spaceship.rotation.z <= 0.3){
+	  		if(spaceship.rotation.z == 0.04999999999999999 || spaceship.rotation.z == -0.04999999999999999){
+	  			spaceship.rotation.z = 0;
+	  		}else if(controller_state.moveX == -1.5 && spaceship.rotation.z <= 0.3){
 	  			spaceship.rotation.z += 0.05;
-	  		} else if(controller_state.moveX == 0 && spaceship.rotation.z >= 0){
+	  		} else if(controller_state.moveX == 0 && spaceship.rotation.z > 0){
 	  			spaceship.rotation.z -= 0.05;
 	  		} else if(controller_state.moveX == 1.5 && spaceship.rotation.z >= -0.3){
 	  			spaceship.rotation.z -= 0.05;
-	  		} else if(controller_state.moveX == 0 && spaceship.rotation.z <= 0){
+	  		} else if(controller_state.moveX == 0 && spaceship.rotation.z < 0){
 	  			spaceship.rotation.z += 0.05;
 	  		}
+	  		// console.log(spaceship.rotation.z);
 	  	}
 	  	if(controller_state.moveY !== undefined){
+	  		spaceship.position.y += controller_state.moveY;
+	  		if(spaceship.rotation.x == 0.04999999999999999 || spaceship.rotation.x == -0.04999999999999999){
+	  			spaceship.rotation.x = 0;
+	  		}else if(controller_state.moveY == 1.5 && spaceship.rotation.x <= 0.3){
+	  			spaceship.rotation.x += 0.05;
+	  		}else if(controller_state.moveY == 0 && spaceship.rotation.x > 0){
+	  			spaceship.rotation.x -= 0.05;
+	  		}else if(controller_state.moveY == -1.5 && spaceship.rotation.x >= -0.3){
+	  			spaceship.rotation.x -= 0.05;
+	  		}else if(controller_state.moveY == 0 && spaceship.rotation.x < 0){
+	  			spaceship.rotation.x += 0.05;
+	  		}
 	  		
 	  	}
 	  		
@@ -429,6 +472,26 @@ for(var i=0; i<NUMOFASTEROIDS; i++){
 					controller_state.moveX = 0;
 					emit_updates();
 				},
+				toparrowstart = function(e){
+					e.preventDefault();
+					controller_state.moveY = -1.5;
+					emit_updates();
+				},
+				toparrowend = function(e){
+					e.preventDefault();
+					controller_state.moveY = 0;
+					emit_updates();
+				},
+				bottomarrowstart = function(e){
+					e.preventDefault();
+					controller_state.moveY = 1.5;
+					emit_updates();
+				},
+				bottomarrowend = function(e){
+					e.preventDefault();
+					controller_state.moveY = 0;
+					emit_updates();
+				},
 				touchstart = function(e){
 					e.preventDefault();
 					controller_state.moveX = -1.5;
@@ -445,8 +508,15 @@ for(var i=0; i<NUMOFASTEROIDS; i++){
 				}
 				document.getElementById('backarrow').addEventListener('touchstart', backarrowstart, false);
 				document.getElementById('backarrow').addEventListener('touchend', backarrowend, false);
+
 				document.getElementById('arrow').addEventListener('touchstart',arrowstart, false);
 				document.getElementById('arrow').addEventListener('touchend', arrowend, false);
+
+				document.getElementById('bottomarrow').addEventListener('touchstart',toparrowstart, false);
+				document.getElementById('bottomarrow').addEventListener('touchend', toparrowend, false);
+
+				document.getElementById('toparrow').addEventListener('touchstart',bottomarrowstart, false);
+				document.getElementById('toparrow').addEventListener('touchend', bottomarrowend, false);
 				// document.body.addEventListener('touchstart', touchstart, false); // iOS & Android
 				document.body.addEventListener('MSPointerDown', touchstart, false); // Windows Phone
 				document.body.addEventListener('touchend', touchend, false); // iOS & Android
