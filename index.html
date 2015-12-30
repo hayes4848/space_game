@@ -8,7 +8,7 @@
 	<script src="https://s3.amazonaws.com/gamepad-js/MTLLoader.js"></script>
 	<script src="https://s3.amazonaws.com/gamepad-js/OBJLoader.js"></script> 
 	<script src="https://s3.amazonaws.com/gamepad-js/tween.js"></script>
-	<script src="//davidshimjs.github.com/qrcodejs/qrcode.min.js"></script>
+	<script src="https://davidshimjs.github.com/qrcodejs/qrcode.min.js"></script>
 	<style>
 		body{
 			margin: 0;
@@ -74,7 +74,7 @@ io.on('connect', function() {
 		create_QR = function(){
 			var QR_code,
 					// url = "http://" + ip + port + "?id=" + io.id;
-					   url = "https://hichew-phone-game.herokuapp.com/?id=" + io.id;
+					   url = "http://hichew-phone-game.herokuapp.com/?id=" + io.id;
 			// Create the container for the QR code to be created in
 			QR_code_element = document.createElement('div');
 			// Assign an id to the element
