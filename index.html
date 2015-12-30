@@ -8,7 +8,6 @@
 	<script src="https://s3.amazonaws.com/gamepad-js/MTLLoader.js"></script>
 	<script src="https://s3.amazonaws.com/gamepad-js/OBJLoader.js"></script> 
 	<script src="https://s3.amazonaws.com/gamepad-js/tween.js"></script>
-	<!-- <script src="https://davidshimjs.github.com/qrcodejs/qrcode.min.js"></script> -->
 	<script src="https://s3.amazonaws.com/gamepad-js/qrcode.min.js"></script>
 	<style>
 		body{
@@ -74,8 +73,8 @@ io.on('connect', function() {
 		var QR_code_element,
 		create_QR = function(){
 			var QR_code,
-					// url = "http://" + ip + port + "?id=" + io.id;
-					   url = "http://hichew-phone-game.herokuapp.com/?id=" + io.id;
+					url = "http://" + ip + port + "?id=" + io.id;
+					   // url = "http://hichew-phone-game.herokuapp.com/?id=" + io.id;
 			// Create the container for the QR code to be created in
 			QR_code_element = document.createElement('div');
 			// Assign an id to the element
@@ -135,11 +134,6 @@ io.on('connect', function() {
 	    shininess: 50,
 	  });
 
-	var materialRock = new THREE.MeshPhongMaterial({
-		map: THREE.ImageUtils.loadTexture('RockTexture.jpg'), 
-		specular: 0xffffff, 
-		shininess: 50,
-	});
 
 	var material = new THREE.MeshBasicMaterial({map: THREE.ImageUtils.loadTexture('space-background.jpg', 
 	  null, function(tex) {
@@ -208,7 +202,7 @@ var Asteroid = function() {
   mesh.vRotation = new THREE.Vector3(Math.random(), Math.random(), Math.random())
   this.hitbox = new THREE.Box3();
 
-  loader.load('decimated_stick.obj', function(obj) {
+  loader.load('decimated_2.obj', function(obj) {
     obj.traverse(function(child) {
       if(child instanceof THREE.Mesh) {
         child.material = materialGreenApple;
@@ -255,31 +249,31 @@ var Asteroid = function() {
   return this
 }	
 
-var Shot = function(initialPos) {
-	var box = new THREE.Object3D(), self = this
-	var shape = new THREE.SphereGeometry(3, 15, 15);
-	var material = new THREE.MeshBasicMaterial({color: 0xFFFFFF});
-	this.mesh = new THREE.Mesh(shape, material); 
-	this.mesh.position.copy(initialPos);
+// var Shot = function(initialPos) {
+// 	var box = new THREE.Object3D(), self = this
+// 	var shape = new THREE.SphereGeometry(3, 15, 15);
+// 	var material = new THREE.MeshBasicMaterial({color: 0xFFFFFF});
+// 	this.mesh = new THREE.Mesh(shape, material); 
+// 	this.mesh.position.copy(initialPos);
 
 
 
-	this.getMesh = function() {
-	   return this.mesh
-	}
-	this.hitbox = new THREE.Box3();
-	this.update = function(z) {
-	   this.mesh.position.z -= 15;
-	   this.hitbox.setFromObject(this.mesh);
-	   if(Math.abs(this.mesh.position.z - z) > 1000) {
-	     return false
-	     delete this.mesh
-	   }
-	   return true
-	}
-	return this
+// 	this.getMesh = function() {
+// 	   return this.mesh
+// 	}
+// 	this.hitbox = new THREE.Box3();
+// 	this.update = function(z) {
+// 	   this.mesh.position.z -= 15;
+// 	   this.hitbox.setFromObject(this.mesh);
+// 	   if(Math.abs(this.mesh.position.z - z) > 1000) {
+// 	     return false
+// 	     delete this.mesh
+// 	   }
+// 	   return true
+// 	}
+// 	return this
 
-}	
+// }	
 
 for(var i=0; i<NUMOFASTEROIDS; i++){
 	asteroids.push(new Asteroid());
