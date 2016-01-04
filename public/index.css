@@ -1,0 +1,45 @@
+body{
+	margin: 0;
+}
+#instructions{
+	position: absolute;
+	width: 25%;
+	top: 40%;
+	left: 40%;
+	padding: 20px;
+	background: white;
+	text-align: center;
+	border-radius: 10px;
+}
+#QR_code{
+	margin-left: 28%;
+}
+.buttons{
+	display: none;
+	background-color: gray;
+	height: 100%;
+}
+.buttons img{
+	position: absolute;
+	width: 25%;
+}
+#toparrow{
+	-webkit-transform: rotate(90deg);
+	top: 0;
+	margin-left: 37%;
+	margin-right: 37%;
+}
+#bottomarrow{
+	-webkit-transform: rotate(90deg);
+	bottom: 0;
+	margin-left: 37%;
+	margin-right: 37%;
+}
+#arrow{
+	right: 0;
+	margin-top: 50%;
+}
+#backarrow{
+	left: 0;
+	margin-top: 50%;
+}

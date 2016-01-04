@@ -9,52 +9,13 @@
 	<script src="https://s3.amazonaws.com/gamepad-js/OBJLoader.js"></script> 
 	<script src="https://s3.amazonaws.com/gamepad-js/tween.js"></script>
 	<script src="https://s3.amazonaws.com/gamepad-js/qrcode.min.js"></script>
-	<style>
-		body{
-			margin: 0;
-		}
-		#QR_code{
-			position: absolute;
-			top: 40%;
-			left: 40%;
-			padding: 20px;
-			background: white;
-		}
-		.buttons{
-			display: none;
-			background-color: gray;
-			height: 100%;
-		}
-		.buttons img{
-			position: absolute;
-			width: 25%;
-		}
-		#toparrow{
-			-webkit-transform: rotate(90deg);
-			top: 0;
-			margin-left: 37%;
-			margin-right: 37%;
-		}
-		#bottomarrow{
-			-webkit-transform: rotate(90deg);
-			bottom: 0;
-			margin-left: 37%;
-			margin-right: 37%;
-		}
-		#arrow{
-			right: 0;
-			margin-top: 50%;
-			/*margin-left: 50%;*/
+	<link rel="stylesheet" type="text/css" href="index.css">
 
-
-		}
-		#backarrow{
-			left: 0;
-			margin-top: 50%;
-		}
-	</style>
 </head>
 <body>
+	<div id="instructions">
+		<p>Scan the QR code, or visit the URL: <span id="url-piece"></span> to control your ship and win! </p>
+	</div>
 	<div class="buttons">
 		<img id="toparrow" src="BackArrow.svg">
 		<img id="backarrow" src="BackArrow.svg">
@@ -73,19 +34,20 @@ io.on('connect', function() {
 		var QR_code_element,
 		create_QR = function(){
 			var QR_code,
-					// url = "http://" + ip + port + "?id=" + io.id;
-					   url = "http://hichew-phone-game.herokuapp.com/?id=" + io.id;
+					url = "http://" + ip + port + "?id=" + io.id;
+					   // url = "http://hichew-phone-game.herokuapp.com/?id=" + io.id;
 			// Create the container for the QR code to be created in
 			QR_code_element = document.createElement('div');
 			// Assign an id to the element
 			QR_code_element.id = "QR_code";
 			// Append QR code element to the body
-			document.body.appendChild(QR_code_element);
+			$('#instructions').append(QR_code_element);
 			// Assign the actual DOM element
 			QR_code_element = document.getElementById('QR_code');
 			// Create a QRCode
 			QR_code = new QRCode("QR_code");
 			QR_code.makeCode(url);
+			$('#url-piece').html(url);
 		},
 		game_connected = function(){
 			create_QR();
@@ -110,7 +72,7 @@ io.on('connect', function() {
 	  var aspect_ratio = window.innerWidth / window.innerHeight;
 	  var camera = new THREE.PerspectiveCamera(75, aspect_ratio, 1, 10000);
 	  camera.position.z = 200;
-	  camera.position.y = 100;
+	  camera.position.y = 0;
 	  camera.lookAt(0,0,0);
 	  camera.setLens(35);
 	  scene.add(camera);
@@ -135,7 +97,7 @@ io.on('connect', function() {
 	  });
 
 
-	var material = new THREE.MeshBasicMaterial({map: THREE.ImageUtils.loadTexture('space-background.jpg', 
+	var material = new THREE.MeshBasicMaterial({map: THREE.ImageUtils.loadTexture('rainbow-wallpaper.jpg', 
 	  null, function(tex) {
       tex.wrapS = tex.wrapT = THREE.RepeatWrapping
       tex.repeat.set(1, 5)
@@ -249,79 +211,12 @@ var Asteroid = function() {
   return this
 }	
 
-// var Shot = function(initialPos) {
-// 	var box = new THREE.Object3D(), self = this
-// 	var shape = new THREE.SphereGeometry(3, 15, 15);
-// 	var material = new THREE.MeshBasicMaterial({color: 0xFFFFFF});
-// 	this.mesh = new THREE.Mesh(shape, material); 
-// 	this.mesh.position.copy(initialPos);
-
-
-
-// 	this.getMesh = function() {
-// 	   return this.mesh
-// 	}
-// 	this.hitbox = new THREE.Box3();
-// 	this.update = function(z) {
-// 	   this.mesh.position.z -= 15;
-// 	   this.hitbox.setFromObject(this.mesh);
-// 	   if(Math.abs(this.mesh.position.z - z) > 1000) {
-// 	     return false
-// 	     delete this.mesh
-// 	   }
-// 	   return true
-// 	}
-// 	return this
-
-// }	
 
 for(var i=0; i<NUMOFASTEROIDS; i++){
 	asteroids.push(new Asteroid());
 	scene.add(asteroids[i].getMesh());
-}					
+}					 
 
-	// checkGamePad = function(){
-	//   if(!!navigator.getGamepads){
-	//     var gamepad = navigator.getGamepads();
-	//     console.log(gamepad[0].id);
-	//   }
-	// }
-
-	// leftJoystick = function() {
-	//   var gamepad = navigator.getGamepads();
-	//   if(gamepad[0].axes[0] < 0.25 && gamepad[0].axes[0] > -0.25 ){ //stick in middle
-	//   	rotationX = 0;
-	//  	new TWEEN.Tween(ship.rotation).to({z: 0}, 150).start().onComplete(function() {
-	// 															  console.log('done!')
-	// 															}); 
-	//   }else if (gamepad[0].axes[0] < -0.25){ //stick to left
-	//     rotationX = -1.5;
-	//  	new TWEEN.Tween(ship.rotation).to({z: 0.2}, 150).start();
-	//   }else if(gamepad[0].axes[0] > 0.25){ // stick to right
-	//     rotationX = 1.5;
-	//  	new TWEEN.Tween(ship.rotation).to({z: -0.2}, 150).start();
-	//   }
-	  // } else if(gamepad[0].axes[1] > 0.25){
-	  //   rotationY = 1.5;
-	 	// new TWEEN.Tween(ship.rotation).to({x: 0.3}, 150).start();
-	  // }else if (gamepad[0].axes[1] < -0.25){
-	  //   rotationY = -1.5;
-	 	// new TWEEN.Tween(ship.rotation).to({x: -0.3}, 150).start();
-	  // }
-	// }
-
-	// rightJoystick = function(){
-	//   var gamepad = navigator.getGamepads();
-	//   if(gamepad[0].axes[2] > 0.25){
-	//     ball.rotation.y += 0.01;
-	//   }else if(gamepad[0].axes[2] < -0.25){
-	//     ball.rotation.y -= 0.01;
-	//   }else if(gamepad[0].axes[3] > 0.25){
-	//     ball.rotation.x += 0.01;
-	//   }else if(gamepad[0].axes[3] < -0.25){
-	//     ball.rotation.x -= 0.01;
-	//   }
-	// }
 
 	var animate = function(){
 	  requestAnimationFrame(animate);
@@ -371,7 +266,7 @@ for(var i=0; i<NUMOFASTEROIDS; i++){
 	  }
 
 	  //check for collision between sticks and ship
-	  for(var i=0;i<NUMOFASTEROIDS;i++){
+	  for(var i=0;i<asteroids.length;i++){
 	    asteroids[i].update(camera.position.z);
 	  if(ship1.hitbox.isIntersectionBox(asteroids[i].hitbox)) {
 	     asteroids[i].reset(camera.position.z)
@@ -404,10 +299,10 @@ for(var i=0; i<NUMOFASTEROIDS; i++){
 		var ship1 = new spaceShip();
 		animate();
 
-		$('#backarrow').on('click', function(){
-			new TWEEN.Tween(spaceship.rotation).to({z: 0.3}, 150).start();
-			console.log('tween');
-		})
+		// $('#backarrow').on('click', function(){
+		// 	new TWEEN.Tween(spaceship.rotation).to({z: 0.3}, 150).start();
+		// 	console.log('tween');
+		// })
 		
 
 		// Tell the server that the client is connecting as a game
@@ -419,10 +314,12 @@ for(var i=0; i<NUMOFASTEROIDS; i++){
 		io.on('controller_connected', function(connected){
 			if(connected){
 				// Hide the QR code
-				QR_code_element.style.display = "none";
+				// QR_code_element.style.display = "none";
+				$('#instructions').hide();
 			}else{
 				// Show the QR code
-				QR_code_element.style.display = "block";
+				// QR_code_element.style.display = "block";
+				$('#instructions').show();
 				controller_state = {};
 			}
 		})
@@ -529,6 +426,7 @@ for(var i=0; i<NUMOFASTEROIDS; i++){
 	// If the url has an id in it
 	if(current_url.indexOf('?id=') > 0){
 		$('.buttons').show();
+		$('#instructions').hide();
 		// Set up the controller using the game id in the url
 		controller(current_url.split('?id=')[1])
 	}else{
