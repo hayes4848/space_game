@@ -4,12 +4,17 @@ body{
 #instructions{
 	position: absolute;
 	width: 25%;
-	top: 40%;
-	left: 40%;
+	top: 15%;
+	left: 35%;
 	padding: 20px;
 	background: white;
 	text-align: center;
 	border-radius: 10px;
+	border: 2px solid black;
+}
+#instructions p {
+	width: 100%;
+	clear: both;
 }
 #QR_code{
 	margin-left: 28%;
@@ -25,15 +30,12 @@ body{
 }
 #toparrow{
 	-webkit-transform: rotate(90deg);
-	top: 0;
-	margin-left: 37%;
-	margin-right: 37%;
+	width: 50%;
+	margin-left: 50%;
 }
 #bottomarrow{
 	-webkit-transform: rotate(90deg);
-	bottom: 0;
-	margin-left: 37%;
-	margin-right: 37%;
+	width: 50%;
 }
 #arrow{
 	right: 0;
@@ -42,4 +44,52 @@ body{
 #backarrow{
 	left: 0;
 	margin-top: 50%;
+}
+#scoreBox{
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 10%;
+	height: 3.5em;
+	background-color: #bfbfbf;
+	color: white;
+	font-size: 1.5em;
+	padding-left: 0.5em;
+}
+.flavor-box{
+	width: 25%;
+	float: left;
+	color: white;
+	padding: 2em 1em;
+	margin: 0.4em;
+	cursor: pointer;
+}
+#grapeChoice{
+	background-color: #93328e;
+}
+#mangoChoice{
+	background-color: #da291c;
+}
+#bananaChoice{
+	background-color: #97d700;
+}
+#cherryChoice{
+	background-color: #93272C;
+}
+#strawberryChoice{
+	background-color: #c8102e;
+}
+#appleChoice{
+	background-color: #7a9a01;
+}
+.pick-title b{
+	color: blue;
+	font-size: 1.5em;
+}
+#qrHolder{
+	display: none;
+}
+.rules ol{
+	/*text-align: left;*/
+	list-style-position: inside;
 }
