@@ -241,7 +241,7 @@ var spaceShip = function(){
 	var loader = new THREE.OBJLoader( manager ), self = this;
 		spaceship = new THREE.Object3D();
 		this.loaded = false;
-		loader.load( 'ARC170.obj', function ( object ) {
+		loader.load( 'xwing.obj', function ( object ) {
 			object.traverse( function ( child ) {
 				if ( child instanceof THREE.Mesh ) {
 					child.material = materialChoice;
