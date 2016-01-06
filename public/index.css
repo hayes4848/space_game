@@ -4,12 +4,13 @@ body{
 #instructions{
 	position: absolute;
 	width: 25%;
-	top: 40%;
-	left: 40%;
+	top: 15%;
+	left: 35%;
 	padding: 20px;
 	background: white;
 	text-align: center;
 	border-radius: 10px;
+	border: 2px solid black;
 }
 #instructions p {
 	width: 100%;
@@ -29,15 +30,12 @@ body{
 }
 #toparrow{
 	-webkit-transform: rotate(90deg);
-	top: 0;
-	margin-left: 37%;
-	margin-right: 37%;
+	width: 50%;
+	margin-left: 50%;
 }
 #bottomarrow{
 	-webkit-transform: rotate(90deg);
-	bottom: 0;
-	margin-left: 37%;
-	margin-right: 37%;
+	width: 50%;
 }
 #arrow{
 	right: 0;
@@ -90,4 +88,8 @@ body{
 }
 #qrHolder{
 	display: none;
+}
+.rules ol{
+	/*text-align: left;*/
+	list-style-position: inside;
 }

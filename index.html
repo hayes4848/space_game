@@ -18,6 +18,19 @@
 	</div>
 	<div id="instructions">
 		<div id="pickFlavor">
+
+			<div class="rules">
+				<h2>RULES</h2>
+				<ol>
+					<li>Pick your favorite flavor of Hi-Chew.</li>
+					<li>Scan the QR code or enter the URL to get the controls on your phone.</li>
+					<li>Tilt your phone to move left - right. (turn phone sideways)</li>
+					<li>Use the buttons to move up - down.</li>
+					<li>Hit the sticks that match your flavor to score points.</li>
+					<li>Win all the things!! </li>
+				</ol>
+			</div>
+
 			<div class="pick-title"> <h2>Pick your favorite Flavor of <b>Hi-Chew</b> to get started! </h2> </div>
 			<div id="grapeChoice" class="flavor-box">Grape</div>
 			<div id="mangoChoice" class="flavor-box">Mango</div>
@@ -32,8 +45,8 @@
 	</div>
 	<div class="buttons">
 		<img id="toparrow" src="BackArrow.svg">
-		<img id="backarrow" src="BackArrow.svg">
-		<img id="arrow" src="Arrow.svg">
+		<!-- <img id="backarrow" src="BackArrow.svg">
+		<img id="arrow" src="Arrow.svg"> -->
 		<img id="bottomarrow" src="Arrow.svg">
 	</div>
 </body>
@@ -52,8 +65,8 @@ io.on('connect', function() {
 		var QR_code_element,
 		create_QR = function(){
 			var QR_code,
-					url = "http://" + ip + port + "?id=" + io.id;
-					   // url = "http://hichew-phone-game.herokuapp.com/?id=" + io.id;
+					// url = "http://" + ip + port + "?id=" + io.id;
+					   url = "http://hichew-phone-game.herokuapp.com/?id=" + io.id;
 			// Create the container for the QR code to be created in
 			QR_code_element = document.createElement('div');
 			// Assign an id to the element
@@ -374,19 +387,21 @@ for(var i=0; i<asteroids.length; i++){
 	  	ship1.update();
 	  
 	  if(spaceship !== undefined){	
-	  	if(controller_state.moveX !== undefined){
-	  		spaceship.position.x += controller_state.moveX;
-	  		if(spaceship.rotation.z == 0.04999999999999999 || spaceship.rotation.z == -0.04999999999999999){
-	  			spaceship.rotation.z = 0;
-	  		}else if(controller_state.moveX == -1.5 && spaceship.rotation.z <= 0.3){
-	  			spaceship.rotation.z += 0.05;
-	  		} else if(controller_state.moveX == 0 && spaceship.rotation.z > 0){
-	  			spaceship.rotation.z -= 0.05;
-	  		} else if(controller_state.moveX == 1.5 && spaceship.rotation.z >= -0.3){
-	  			spaceship.rotation.z -= 0.05;
-	  		} else if(controller_state.moveX == 0 && spaceship.rotation.z < 0){
-	  			spaceship.rotation.z += 0.05;
-	  		}
+	  	if(controller_state.steer !== undefined){
+	  		if(controller_state.orientation == 90 || controller_state.orientation == -90){
+		  		spaceship.position.x += controller_state.steer;
+		  		if(spaceship.rotation.z == 0.04999999999999999 || spaceship.rotation.z == -0.04999999999999999){
+		  			spaceship.rotation.z = 0;
+		  		}else if(controller_state.steer == -1.5 && spaceship.rotation.z <= 0.3){
+		  			spaceship.rotation.z += 0.05;
+		  		} else if(controller_state.steer == 0 && spaceship.rotation.z > 0){
+		  			spaceship.rotation.z -= 0.05;
+		  		} else if(controller_state.steer == 1.5 && spaceship.rotation.z >= -0.3){
+		  			spaceship.rotation.z -= 0.05;
+		  		} else if(controller_state.steer == 0 && spaceship.rotation.z < 0){
+		  			spaceship.rotation.z += 0.05;
+		  		}
+		  	}	
 	  		// console.log(spaceship.rotation.z);
 	  	}
 	  	if(controller_state.moveY !== undefined){
@@ -443,7 +458,14 @@ for(var i=0; i<asteroids.length; i++){
 	       // break
 	     }
 	   }
-	   TWEEN.update();	
+	   TWEEN.update();
+	   	if(controller_state.steer !== undefined ){
+	   		if(controller_state.orientation == 90 || controller_state.orientation == -90){
+
+	   			console.log(controller_state.steer);
+	   		}	
+		}
+	
 	}
 	controller_state = {};
 
@@ -532,7 +554,11 @@ var updateScore = function(){
 				// alert("Connected!");
 				var controller_state = {
 					accelerate: false,
-					steer: 0
+					steer: 0,
+					alpha: 0,
+					beta: 0,
+					gamma: 0, 
+					orientation: 0
 				},
 				emit_updates = function(){
 					io.emit('controller_state_change', controller_state);
@@ -588,16 +614,30 @@ var updateScore = function(){
 					emit_updates();
 				},
 				devicemotion = function(e){
-					controller_state.steer = e.acceleration.x * 100;
+					controller_state.gamma = e.gamma;
+					controller_state.alpha = e.alpha;
+					controller_state.beta = e.beta;
 					emit_updates();
-				}
+				},
+				devicemotion2 = function(e){
+					if(e.accelerationIncludingGravity.y * 10 > 15 ){
+						controller_state.steer = -1.5;
+					}else if(e.accelerationIncludingGravity.y * 10 < -15){
+						controller_state.steer = 1.5;
+					}else{
+						controller_state.steer = 0;
+					}
+					// controller_state.steer = e.accelerationIncludingGravity.y * 10;
+					emit_updates();
+				},
+				
 				
 
-				document.getElementById('backarrow').addEventListener('touchstart', backarrowstart, false);
-				document.getElementById('backarrow').addEventListener('touchend', backarrowend, false);
+				// document.getElementById('backarrow').addEventListener('touchstart', backarrowstart, false);
+				// document.getElementById('backarrow').addEventListener('touchend', backarrowend, false);
 
-				document.getElementById('arrow').addEventListener('touchstart',arrowstart, false);
-				document.getElementById('arrow').addEventListener('touchend', arrowend, false);
+				// document.getElementById('arrow').addEventListener('touchstart',arrowstart, false);
+				// document.getElementById('arrow').addEventListener('touchend', arrowend, false);
 
 				document.getElementById('bottomarrow').addEventListener('touchstart',toparrowstart, false);
 				document.getElementById('bottomarrow').addEventListener('touchend', toparrowend, false);
@@ -608,7 +648,11 @@ var updateScore = function(){
 				document.body.addEventListener('MSPointerDown', touchstart, false); // Windows Phone
 				document.body.addEventListener('touchend', touchend, false); // iOS & Android
 				document.body.addEventListener('MSPointerUp', touchend, false); // Windows Phone
-				window.addEventListener('devicemotion', devicemotion, false);
+				window.addEventListener('deviceorientation', devicemotion, false);
+				window.addEventListener('devicemotion', devicemotion2, false);
+				window.addEventListener("orientationchange", function(){
+																controller_state.orientation = window.orientation; emit_updates();
+															});
 
 				
 			}else{
