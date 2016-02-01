@@ -9,6 +9,10 @@
 	<script src="https://s3.amazonaws.com/gamepad-js/OBJLoader.js"></script> 
 	<script src="https://s3.amazonaws.com/gamepad-js/tween.js"></script>
 	<script src="https://s3.amazonaws.com/gamepad-js/qrcode.min.js"></script>
+	<script src="http://threejs.org/examples/js/geometries/TextGeometry.js"></script>
+	<script src="http://threejs.org/examples/js/utils/FontUtils.js"></script>
+	<script src="https://s3.amazonaws.com/gamepad-js/droid/droid_sans_regular.typeface.js"></script>
+
 	<link rel="stylesheet" type="text/css" href="index.css">
 
 </head>
@@ -43,30 +47,29 @@
 			<p>visit the URL: <br> <span id="url-piece"></span> <br><br> OR Scan the QR code to control your ship and win! </p>
 		</div>
 	</div>
-	<div class="buttons">
+	<!-- <div class="buttons">
 		<img id="toparrow" src="BackArrow.svg">
-		<!-- <img id="backarrow" src="BackArrow.svg">
-		<img id="arrow" src="Arrow.svg"> -->
+		<img id="backarrow" src="BackArrow.svg">
+		<img id="arrow" src="Arrow.svg">
 		<img id="bottomarrow" src="Arrow.svg">
-	</div>
+	</div> -->
 </body>
 <script>
 var materialChoice = new Boolean('false');
-var ip = '10.225.49.144', // Your ip
+// var ip = '10.225.49.144', // Your ip
+	var ip = '10.225.49.144'
 		port = ':3000',
 		io = io.connect(),
 		current_url = window.location.href;
 io.on('connect', function() {
 	// Game setup
 
-
-
 	var game = function(ip){
 		var QR_code_element,
 		create_QR = function(){
 			var QR_code,
-					// url = "http://" + ip + port + "?id=" + io.id;
-					   url = "http://hichew-phone-game.herokuapp.com/?id=" + io.id;
+					url = "http://" + ip + port + "?id=" + io.id;
+					   // url = "http://hichew-phone-game.herokuapp.com/?id=" + io.id;
 			// Create the container for the QR code to be created in
 			QR_code_element = document.createElement('div');
 			// Assign an id to the element
@@ -175,6 +178,15 @@ io.on('connect', function() {
     
 	side: THREE.BackSide});
 
+	var plainStars = new THREE.MeshBasicMaterial({map: THREE.ImageUtils.loadTexture('stars_background.jpg', 
+	  null, function(tex) {
+      tex.wrapS = tex.wrapT = THREE.RepeatWrapping
+      tex.repeat.set(5, 7)
+      tex.needsUpdate = true
+    }),
+    
+	side: THREE.BackSide});
+
 
 
 
@@ -190,6 +202,7 @@ io.on('connect', function() {
 	 var shots = [];
 	 var score = 0;
 	 var ship1;
+	 var word;
 	 var materialChoice = materialGrape;
 	 var material;
 	 var scoreCounter;
@@ -215,12 +228,19 @@ io.on('connect', function() {
 
 	  var ambLight = new THREE.AmbientLight(0xFFFFFF, 0.9);
 	  scene.add(ambLight);
-	  scene.fog = new THREE.FogExp2(0x0000022, 0.00125)
+	  scene.fog = new THREE.FogExp2(0x0000022, 0.0007)
+	  // 0.00125
+
+// var wordTest = new THREE.TextGeometry('+10', {size: 5, height: 10, font: 'droid sans', weight: 'normal'});
+// var material = new THREE.MeshBasicMaterial({color: 0xffff00});
+// var testWords = new THREE.Mesh(wordTest, material);
+// testWords.position.set(-5, 10, -250);
+// camera.add (testWords);
 
 	
 var firstTunnel = function(material){	
 	var tube = new THREE.CylinderGeometry(300, 300, 5000, 24, 24, true);
-	var tunnel1 = new THREE.Mesh(tube, material);	
+	var tunnel1 = new THREE.Mesh(tube, plainStars);	
 	tunnel1.rotation.x = -Math.PI/2;
 	scene.add(tunnel1);
 	tunnels.push(tunnel1);
@@ -228,12 +248,32 @@ var firstTunnel = function(material){
 
 var secondTunnel = function(material){
 	var tube = new THREE.CylinderGeometry(300, 300, 5000, 24, 24, true);
-	var tunnel2 = new THREE.Mesh(tube, material);	
+	var tunnel2 = new THREE.Mesh(tube, plainStars);	
 	tunnel2.rotation.x = -Math.PI/2;
 	tunnel2.position.set(0,0,-5000);
 	scene.add(tunnel2);
 	tunnels.push(tunnel2);
 }
+
+var funScorePiece = function(shipX, shipY, zPos){
+	// scorePlus = new THREE.Object3D();
+	var text = new THREE.TextGeometry('+10', {size: 5, height: 5, font: 'droid sans', weight: 'normal'});
+	var material = new THREE.MeshBasicMaterial({color: 0xffff00});
+	var word = new THREE.Mesh(text, material);
+	word.position.set(camera.position.x -5, camera.position.y, zPos -150);
+	scene.add(word);
+	return word;
+}
+
+var updateScore = function(shipX, shipY, zPos) {
+	score += 10;
+	$('#currentScore').html(score);
+	var wordFlash = new funScorePiece(shipX, shipY, zPos);
+	// camera.add(wordFlash);
+	// wordFlash.position.set(camera.position.x, camera.position.y, zPos -100);
+}
+
+
 
 
 //spaceship 
@@ -332,43 +372,38 @@ var Asteroid = function(skin, name) {
 }	
 
 
-// for(var i=0; i<NUMOFASTEROIDS; i++){
-// 	asteroids.push(new Asteroid(materialGreenApple));
-// 	scene.add(asteroids[i].getMesh());
-// }
-
 var greenStick1 = new Asteroid(materialGreenApple, "apple");	
 asteroids.push(greenStick1);
-
-var greenStick2 = new Asteroid(materialGreenApple, "apple");	
-asteroids.push(greenStick2);
 
 var grapeStick1 = new Asteroid(materialGrape, "grape");	
 asteroids.push(grapeStick1);
 
-var grapeStick2 = new Asteroid(materialGrape, "grape");	
-asteroids.push(grapeStick2);
-
 var strawberryStick1 = new Asteroid(materialStrawberry, "strawberry");	
 asteroids.push(strawberryStick1);
-
-var strawberryStick2 = new Asteroid(materialStrawberry, "strawberry");	
-asteroids.push(strawberryStick2);
 
 var mangoStick1 = new Asteroid(materialMango, "mango");	
 asteroids.push(mangoStick1);
 
-var mangoStick2 = new Asteroid(materialMango, "mango");	
-asteroids.push(mangoStick2);
-
 var bananaStick1 = new Asteroid(materialBanana, "banana");	
 asteroids.push(bananaStick1);
 
-var bananaStick2 = new Asteroid(materialBanana, "banana");	
-asteroids.push(bananaStick2);
-
 var cherryStick1 = new Asteroid(materialCherry, "cherry");	
 asteroids.push(cherryStick1);
+
+var greenStick2 = new Asteroid(materialGreenApple, "apple");	
+asteroids.push(greenStick2);
+
+var grapeStick2 = new Asteroid(materialGrape, "grape");	
+asteroids.push(grapeStick2);
+
+var strawberryStick2 = new Asteroid(materialStrawberry, "strawberry");	
+asteroids.push(strawberryStick2);
+
+var mangoStick2 = new Asteroid(materialMango, "mango");	
+asteroids.push(mangoStick2);
+
+var bananaStick2 = new Asteroid(materialBanana, "banana");	
+asteroids.push(bananaStick2);
 
 var cherryStick2 = new Asteroid(materialCherry, "cherry");	
 asteroids.push(cherryStick2);
@@ -388,45 +423,65 @@ for(var i=0; i<asteroids.length; i++){
 	  
 	  if(spaceship !== undefined){	
 	  	if(controller_state.steer !== undefined){
-	  		if(controller_state.orientation == 90 || controller_state.orientation == -90){
-		  		spaceship.position.x += controller_state.steer;
-		  		if(spaceship.rotation.z == 0.04999999999999999 || spaceship.rotation.z == -0.04999999999999999){
+	  		if(controller_state.orientation == 90 /*|| controller_state.orientation == -90 */){
+		  		if(spaceship.position.x < -90 && controller_state.steer == -1 || spaceship.position.x > 90 && controller_state.steer == 1){
+		  			spaceship.position.x += 0;
 		  			spaceship.rotation.z = 0;
-		  		}else if(controller_state.steer == -1.5 && spaceship.rotation.z <= 0.3){
-		  			spaceship.rotation.z += 0.05;
-		  		} else if(controller_state.steer == 0 && spaceship.rotation.z > 0){
-		  			spaceship.rotation.z -= 0.05;
-		  		} else if(controller_state.steer == 1.5 && spaceship.rotation.z >= -0.3){
-		  			spaceship.rotation.z -= 0.05;
-		  		} else if(controller_state.steer == 0 && spaceship.rotation.z < 0){
-		  			spaceship.rotation.z += 0.05;
+		  		} else {
+		  			spaceship.position.x += controller_state.steer;
+			  		camera.position.x += controller_state.steer/0.8;
+			  		// console.log(spaceship.position.x);
+			  		if(spaceship.rotation.z == 0.04999999999999999 || spaceship.rotation.z == -0.04999999999999999){
+			  			spaceship.rotation.z = 0;
+			  		}else if(controller_state.steer == -1 && spaceship.rotation.z <= 0.3){
+			  			spaceship.rotation.z += 0.05;
+			  		} else if(controller_state.steer == 0 && spaceship.rotation.z > 0){
+			  			spaceship.rotation.z -= 0.05;
+			  		} else if(controller_state.steer == 1 && spaceship.rotation.z >= -0.3){
+			  			spaceship.rotation.z -= 0.05;
+			  		} else if(controller_state.steer == 0 && spaceship.rotation.z < 0){
+			  			spaceship.rotation.z += 0.05;
+			  		}
 		  		}
 		  	}	
-	  		// console.log(spaceship.rotation.z);
 	  	}
-	  	if(controller_state.moveY !== undefined){
-	  		spaceship.position.y += controller_state.moveY;
-	  		if(spaceship.rotation.x == 0.04999999999999999 || spaceship.rotation.x == -0.04999999999999999){
-	  			spaceship.rotation.x = 0;
-	  		}else if(controller_state.moveY == 1.5 && spaceship.rotation.x <= 0.3){
-	  			spaceship.rotation.x += 0.05;
-	  		}else if(controller_state.moveY == 0 && spaceship.rotation.x > 0){
-	  			spaceship.rotation.x -= 0.05;
-	  		}else if(controller_state.moveY == -1.5 && spaceship.rotation.x >= -0.3){
-	  			spaceship.rotation.x -= 0.05;
-	  		}else if(controller_state.moveY == 0 && spaceship.rotation.x < 0){
-	  			spaceship.rotation.x += 0.05;
-	  		}
-	  		
+	  	if(controller_state.flight !== undefined){
+	  	  if(controller_state.orientation == 90 /*|| controller_state.orientation == -90*/){	
+	  	  	  if(spaceship.position.y < -50 && controller_state.flight == -1 || spaceship.position.y > 60 && controller_state.flight == 1){
+	  	  	  	spaceship.position.y += 0;
+		  		spaceship.rotation.x = 0;
+	  	  	  } else {
+	  	  	  	spaceship.position.y += controller_state.flight;
+		  		camera.position.y += controller_state.flight/0.5;
+		  		if(spaceship.rotation.x == 0.04999999999999999 || spaceship.rotation.x == -0.04999999999999999){
+		  			spaceship.rotation.x = 0;
+		  		}else if(controller_state.flight == 1 && spaceship.rotation.x <= 0.3){
+		  			spaceship.rotation.x += 0.05;
+		  		}else if(controller_state.flight == 0 && spaceship.rotation.x > 0){
+		  			spaceship.rotation.x -= 0.05;
+		  		}else if(controller_state.flight == -1 && spaceship.rotation.x >= -0.3){
+		  			spaceship.rotation.x -= 0.05;
+		  		}else if(controller_state.flight == 0 && spaceship.rotation.x < 0){
+		  			spaceship.rotation.x += 0.05;
+		  		}
+	  	  	  }	
+	  	  }	
 	  	}
 	  		
 	  	camera.position.z -= 5;
 	  }
 
+	    if(word !== undefined){
+		  if(camera.position.z < word.position.z ){
+		  	scene.remove(word);
+		  }
+		}
+
 	  for(var i=0; i<2; i++){
 	  	if(camera.position.z < tunnels[i].position.z - 2500 ){
 	  		tunnels[i].position.z -=10000;
 	  	}
+	  	tunnels[i].rotation.y += 0.01;
 	  }
 
 	  //check for collision between sticks and ship
@@ -436,7 +491,8 @@ for(var i=0; i<asteroids.length; i++){
 	     asteroids[i].reset(camera.position.z)
 	     // console.log(asteroids[i].getName());
 	     if(asteroids[i].getName() == scoreCounter){
-	     	updateScore();
+	     	// controller().updateScore();
+	     	updateScore(spaceship.position.x, spaceship.position.y, camera.position.z);
 	     }
 	   }
 	  } 
@@ -459,12 +515,6 @@ for(var i=0; i<asteroids.length; i++){
 	     }
 	   }
 	   TWEEN.update();
-	   	if(controller_state.steer !== undefined ){
-	   		if(controller_state.orientation == 90 || controller_state.orientation == -90){
-
-	   			console.log(controller_state.steer);
-	   		}	
-		}
 	
 	}
 	controller_state = {};
@@ -512,11 +562,6 @@ for(var i=0; i<asteroids.length; i++){
 		ship1 = new spaceShip(materialChoice);
 		animate();
 	});
-		
-var updateScore = function(){
-	score += 10;
-	$('#currentScore').html(score);
-}
 
 
 		// Tell the server that the client is connecting as a game
@@ -525,14 +570,13 @@ var updateScore = function(){
 		// Create a QR code which will be a url with this game id as a parameter
 		io.on('game_connected', game_connected);
 		// When a controller has connected/disconnected to this game
+		
 		io.on('controller_connected', function(connected){
 			if(connected){
 				// Hide the QR code
-				// QR_code_element.style.display = "none";
 				$('#instructions').hide();
 			}else{
 				// Show the QR code
-				// QR_code_element.style.display = "block";
 				$('#instructions').show();
 				controller_state = {};
 			}
@@ -541,7 +585,14 @@ var updateScore = function(){
 		io.on('controller_state_change', function(state){
 			controller_state = state;
 		});
+		// io.on("change_score", function(score){
+		// 	$('#currentScore').html(score);
+		// 	alert(score);
+		// });
+
 	},
+
+
 	// Controller set up
 	controller = function(game_id){
 		// Tell the server this client is connecting as a controller
@@ -552,109 +603,51 @@ var updateScore = function(){
 			if(connected){
 				// Successful connection
 				// alert("Connected!");
+				var updateScore = function(){
+					score += 10;
+					// $('#currentScore').html(score);
+					io.emit('update_score', score);
+				};
+
 				var controller_state = {
 					accelerate: false,
 					steer: 0,
+					flight: 0,
 					alpha: 0,
 					beta: 0,
 					gamma: 0, 
 					orientation: 0
 				},
+				
 				emit_updates = function(){
 					io.emit('controller_state_change', controller_state);
-				}
-				backarrowstart = function(e){
-					e.preventDefault();
-					controller_state.moveX = -1.5;
-					emit_updates();
 				},
-				backarrowend = function(e){
-					e.preventDefault();
-					controller_state.moveX = 0;
-					emit_updates();
-				},
-				arrowstart = function(e){
-					e.preventDefault();
-					controller_state.moveX = 1.5;
-					emit_updates();
-				},
-				arrowend = function(e){
-					e.preventDefault();
-					controller_state.moveX = 0;
-					emit_updates();
-				},
-				toparrowstart = function(e){
-					e.preventDefault();
-					controller_state.moveY = -1.5;
-					emit_updates();
-				},
-				toparrowend = function(e){
-					e.preventDefault();
-					controller_state.moveY = 0;
-					emit_updates();
-				},
-				bottomarrowstart = function(e){
-					e.preventDefault();
-					controller_state.moveY = 1.5;
-					emit_updates();
-				},
-				bottomarrowend = function(e){
-					e.preventDefault();
-					controller_state.moveY = 0;
-					emit_updates();
-				},
-				touchstart = function(e){
-					e.preventDefault();
-					controller_state.moveX = -1.5;
-					emit_updates();
-				},
-				touchend = function(e){
-					e.preventDefault();
-					controller_state.moveX = -0;
-					emit_updates();
-				},
-				devicemotion = function(e){
-					controller_state.gamma = e.gamma;
-					controller_state.alpha = e.alpha;
-					controller_state.beta = e.beta;
-					emit_updates();
-				},
+			
 				devicemotion2 = function(e){
-					if(e.accelerationIncludingGravity.y * 10 > 15 ){
-						controller_state.steer = -1.5;
-					}else if(e.accelerationIncludingGravity.y * 10 < -15){
-						controller_state.steer = 1.5;
+					if(e.accelerationIncludingGravity.y * 10 > 20 ){
+						controller_state.steer = -1;
+					}else if(e.accelerationIncludingGravity.y * 10 < -20){
+						controller_state.steer = 1;
 					}else{
 						controller_state.steer = 0;
 					}
-					// controller_state.steer = e.accelerationIncludingGravity.y * 10;
+					
+					if(e.accelerationIncludingGravity.x * 10 < -90){
+						controller_state.flight = 1;
+					}else if(e.accelerationIncludingGravity.x * 10 > -60){
+						controller_state.flight = -1;
+					} else {
+						controller_state.flight = 0;
+						// controller_state.flight = e.accelerationIncludingGravity.x * 10;
+					}
 					emit_updates();
-				},
+				}
 				
-				
-
-				// document.getElementById('backarrow').addEventListener('touchstart', backarrowstart, false);
-				// document.getElementById('backarrow').addEventListener('touchend', backarrowend, false);
-
-				// document.getElementById('arrow').addEventListener('touchstart',arrowstart, false);
-				// document.getElementById('arrow').addEventListener('touchend', arrowend, false);
-
-				document.getElementById('bottomarrow').addEventListener('touchstart',toparrowstart, false);
-				document.getElementById('bottomarrow').addEventListener('touchend', toparrowend, false);
-
-				document.getElementById('toparrow').addEventListener('touchstart',bottomarrowstart, false);
-				document.getElementById('toparrow').addEventListener('touchend', bottomarrowend, false);
-				// document.body.addEventListener('touchstart', touchstart, false); // iOS & Android
-				document.body.addEventListener('MSPointerDown', touchstart, false); // Windows Phone
-				document.body.addEventListener('touchend', touchend, false); // iOS & Android
-				document.body.addEventListener('MSPointerUp', touchend, false); // Windows Phone
-				window.addEventListener('deviceorientation', devicemotion, false);
 				window.addEventListener('devicemotion', devicemotion2, false);
 				window.addEventListener("orientationchange", function(){
 																controller_state.orientation = window.orientation; emit_updates();
 															});
-
-				
+	
 			}else{
 				// Failed connection
 				// alert("Not connected!");
@@ -664,13 +657,14 @@ var updateScore = function(){
 	}
 	// If the url has an id in it
 	if(current_url.indexOf('?id=') > 0){
-		$('.buttons').show();
+		// $('.buttons').show();
 		$('#instructions').hide();
-		$('#scoreBox').hide();
+		$('#scoreBox').show();
 		// Set up the controller using the game id in the url
 		controller(current_url.split('?id=')[1])
 	}else{
-		$('.buttons').hide();
+		// $('#scoreBox').hide();
+		// $('.buttons').hide();
 		// Set up the game using ip
 		game(ip);
 	}

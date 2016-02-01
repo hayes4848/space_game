@@ -29,7 +29,8 @@ io.sockets.on('connection', function (socket) {
 
   if (game_sockets[game_socket_id] && !game_sockets[game_socket_id].controller_id) {
 
-  	console.log(game_sockets[game_socket_id].controller_id);
+
+  	console.log(game_socket_id);
     console.log("Controller connected");
 
     controller_sockets[socket.id] = {
@@ -38,6 +39,7 @@ io.sockets.on('connection', function (socket) {
     };
 
     game_sockets[game_socket_id].controller_id = socket.id;
+
 
     game_sockets[game_socket_id].socket.emit("controller_connected", true);
 
@@ -49,8 +51,8 @@ io.sockets.on('connection', function (socket) {
 		    game_sockets[game_socket_id].socket.emit("controller_state_change", data)
 
 		  }
-
 		});
+    
 
     socket.emit("controller_connected", true);
 
@@ -62,6 +64,13 @@ io.sockets.on('connection', function (socket) {
   }
 
 });
+
+
+// socket.on('update_score', function(score){
+//   console.log(score);
+//   controller_sockets[game_socket_id].socket.emit("change_score", score);
+// });
+
 
 socket.on('disconnect', function () {
 
@@ -93,6 +102,7 @@ socket.on('disconnect', function () {
     delete controller_sockets[socket.id];
   }
 });	
+
 });
 
 http.listen(process.env.PORT || 3000, function(){

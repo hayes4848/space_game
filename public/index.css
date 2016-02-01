@@ -19,7 +19,7 @@ body{
 #QR_code{
 	margin-left: 28%;
 }
-.buttons{
+/*.buttons{
 	display: none;
 	background-color: gray;
 	height: 100%;
@@ -27,8 +27,8 @@ body{
 .buttons img{
 	position: absolute;
 	width: 25%;
-}
-#toparrow{
+}*/
+/*#toparrow{
 	-webkit-transform: rotate(90deg);
 	width: 50%;
 	margin-left: 50%;
@@ -44,17 +44,14 @@ body{
 #backarrow{
 	left: 0;
 	margin-top: 50%;
-}
+}*/
 #scoreBox{
-	position: absolute;
-	top: 0;
-	right: 0;
-	width: 10%;
-	height: 3.5em;
+	width: 100%;
 	background-color: #bfbfbf;
 	color: white;
-	font-size: 1.5em;
-	padding-left: 0.5em;
+	font-size: 4em;
+	margin-bottom: -1em;
+	
 }
 .flavor-box{
 	width: 25%;
